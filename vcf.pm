@@ -40,7 +40,7 @@ sub Samples {
 	my $vcffile = shift @_;
 
 	my @sample;
-    open  I, $vcffile =~ /\.gz$/ ? "gzip -dc $vcffile |" : $vcffile or die "Cannot open file $vcffile\n";
+	open  I, $vcffile =~ /\.gz$/ ? "gzip -dc $vcffile |" : $vcffile or die "Cannot open file $vcffile\n";
 	while ( <I> ) { 
 		chomp;
 		last if !/^#/;
