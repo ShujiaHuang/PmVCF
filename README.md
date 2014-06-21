@@ -6,8 +6,8 @@ LICENSE
 --------
 Copyright &copy; 2014-2015
 
-__Author & contributors:__ Shujia Huang
-__Contact              :__ huangshujia@genomics.cn
+__Author & contributors:__ Shujia Huang              <br/>
+__Contact              :__ huangshujia@genomics.cn   <br/>
 
 ### addformat
 
