@@ -60,7 +60,10 @@ Caution:
 		$toheader{$key} = $fromheader{$key};
 	}
 
+	print STDERR "[INFO] Loading the FORMAT $add fields from $fromVcfInfile\n";
 	my %newFormatValue; GetFormatValue( $fromVcfInfile, \%newFormatValue, @add ); # Get new format for per positions
+	print STDERR "[INFO] FORMAT $add fields loading done\n";
+	print STDERR "[INFO] Adding $add fields to $toVcfInfile and outputting to a new vcf file\n";
 
 	### Output 
 	for my $k ( sort {$a cmp $b} keys %toheader ) { print "$toheader{$k}\n"; }
@@ -96,6 +99,7 @@ Caution:
 		print join "\t", @col; print "\n";
 	}
 	close I;
+	print STDERR "[INFO] FORMAT adding done.\n";
 }
 
 sub UpdateValueInFORMAT {}
