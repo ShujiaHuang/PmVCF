@@ -24,7 +24,9 @@ sub VcfHeader {
 		if (/^##fileformat/) { $header{'A'} = $_; next; }
 		if (/##reference=/ ) { $header{'r'} = $_; next; }
 		if (/^#CHROM/      ) { $header{'~'} = $_; next; }
-		my ( $mark, $id ) = /##([^=]+)=<ID=([^,]+),/;
+		if (!/##([^=]+)=<ID=([^,]+),/){ my ($k) = /##(\S+)/; $header{$k} = $_; next; } # Other
+		my ( $mark, $id ) = /##([^=]+)=<ID=([^,]+),/; 
+		die "[ERROR] Header format not right $_ in $vcffile\n" if !$mark or !$id;
 		my $key           = "$mark:$id"; # The key format is looks like : 'FORMAT:GT' or 'INFO:AC'
 		$header{$key}     = $_;
 	}

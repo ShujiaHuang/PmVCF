@@ -39,6 +39,7 @@ Usage : perl $0 addformat -from [vcf] -to [Target vcf] -add 'foo:bar' > OutputVC
 Caution:  
     * The samples and the order of sample should be the same in [-from [vcf]] and [-to [Target vcf] ] 
 \n/ if !defined $add or !defined $fromVcfInfile or !$toVcfInfile;
+	print STDERR "[INFO] perl $0 addformat\n\t-from $fromVcfInfile\n\t-to $toVcfInfile\n\t-add $add\n";
 
 	my $fromSample = join ",", vcf::Samples( $fromVcfInfile );
 	my $toSample   = join ",", vcf::Samples( $toVcfInfile   );
