@@ -6,6 +6,7 @@ $AUTHOR  = 'Shujia Huang';
 
 use strict;
 use warnings;
+use PerlIO::gzip;
 
 require Exporter;
 our @ISA = qw(Exporter);
@@ -14,9 +15,13 @@ our @EXPORT = ();
 our @EXPORT_OK = qw ( VcfHeader );
 
 sub VcfHeader {
+
 	my $vcffile = shift @_;
 	my %header;
-	open  I, $vcffile =~ /\.gz$/ ? "gzip -dc $vcffile |" : $vcffile or die "Cannot open file $vcffile\n";
+
+	if ($vcffile =~ /\.gz$/) { open I, "<:gzip",$vcffile or die "Cannot open file $vcffile\n"; }
+    else { open I, $vcffile or die "Cannot open file $vcffile\n"; }
+
 	while ( <I> ) {
 		chomp;
 		last if !/^#/;
@@ -42,7 +47,10 @@ sub Samples {
 	my $vcffile = shift @_;
 
 	my @sample;
-	open  I, $vcffile =~ /\.gz$/ ? "gzip -dc $vcffile |" : $vcffile or die "Cannot open file $vcffile\n";
+
+	if ($vcffile =~ /\.gz$/) { open I, "<:gzip",$vcffile or die "Cannot open file $vcffile\n"; }
+    else { open I, $vcffile or die "Cannot open file $vcffile\n"; }
+
 	while ( <I> ) { 
 		chomp;
 		last if !/^#/;

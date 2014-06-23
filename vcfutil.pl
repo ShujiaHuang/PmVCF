@@ -4,6 +4,7 @@
 use strict;
 use warnings;
 use Getopt::Long;
+use PerlIO::gzip;
 
 use lib "/home/siyang/USER/huangshujia/iCodeSpace/perl/My/PmVCF";
 use vcf;
@@ -23,10 +24,12 @@ print STDERR "\n************************** Processing $command DONE ************
 
 sub AddFORMAT {
 	my ( $fromVcfInfile, $toVcfInfile, $add );
+	my $refId = "ALL";
 	GetOptions (
 		"from=s"=> \$fromVcfInfile,  # Get same FORMAT from this VCF file
 		"to=s"  => \$toVcfInfile,    # Target VCF. Insert to this VCF file
 		"add=s" => \$add,            # FORMAT.   should looks like : 'foo:bar'
+		"id=s"	=> \$refId,          # The reference chromosome id. [ALL]
 	);
 
 	print STDERR "[ERROR] User ERROR. Missing '-from' parameter.\n" if @ARGV > 1 and !defined $fromVcfInfile;
@@ -34,12 +37,15 @@ sub AddFORMAT {
 	print STDERR "[ERROR] User ERROR. Missing '-add'  parameter.\n" if @ARGV > 1 and !defined $add;
 
 	die qq/
-Usage : perl $0 addformat -from [vcf] -to [Target vcf] -add 'foo:bar' > OutputVCF
+Usage : perl $0 addformat [Option] -from [vcf] -to [Target vcf] -add 'foo:bar' > OutputVCF
+
+    Option :
+        -id  [str]  The reference chromosome id. [ALL]
 
 Caution:  
     * The samples and the order of sample should be the same in [-from [vcf]] and [-to [Target vcf] ] 
 \n/ if !defined $add or !defined $fromVcfInfile or !$toVcfInfile;
-	print STDERR "[INFO] perl $0 addformat\n\t-from $fromVcfInfile\n\t-to $toVcfInfile\n\t-add $add\n";
+	print STDERR "[INFO] perl $0 addformat\n\t-from $fromVcfInfile\n\t-to $toVcfInfile\n\t-add $add\n\t-id $refId\n";
 
 	my $fromSample = join ",", vcf::Samples( $fromVcfInfile );
 	my $toSample   = join ",", vcf::Samples( $toVcfInfile   );
@@ -61,17 +67,21 @@ Caution:
 	}
 
 	print STDERR "[INFO] Loading the FORMAT $add fields from $fromVcfInfile\n";
-	my %newFormatValue; GetFormatValue( $fromVcfInfile, \%newFormatValue, @add ); # Get new format for per positions
+	my %newFormatValue; GetFormatValue( $fromVcfInfile, $refId, \%newFormatValue, @add ); # Get new format for per positions
 	print STDERR "[INFO] FORMAT $add fields loading done\n";
 	print STDERR "[INFO] Adding $add fields to $toVcfInfile and outputting to a new vcf file\n";
 
 	### Output 
 	for my $k ( sort {$a cmp $b} keys %toheader ) { print "$toheader{$k}\n"; }
-	open  I,$toVcfInfile=~/\.gz$/ ? "gzip -dc $toVcfInfile |":$toVcfInfile or die "Cannot open file $toVcfInfile\n";
+
+	if ($toVcfInfile=~/\.gz$/) { open I, "<:gzip",$toVcfInfile or die "Cannot open file $toVcfInfile\n"; } 
+	else { open I, $toVcfInfile or die "Cannot open file $toVcfInfile\n"; }
+
 	while ( <I> ) {
 		chomp;
 		next if /^#/;
 		my @col = split;
+		next if $refId ne "ALL" and $refId ne $col[0];		
 
 		my @format = split /:/, $col[8];
         die "[ERROR] The first field in FORMAT should be 'GT'\n" if $format[0] ne 'GT';
@@ -111,15 +121,22 @@ sub AddInfo {}
 #####################################################################################
 
 sub GetFormatValue {
-	my ( $vcfInfile, $formatValue, @field) = @_;
+	my ( $vcfInfile, $refId, $formatValue, @field) = @_;
 
 	my %sample;
-	open  I, $vcfInfile =~ /\.gz$/ ? "gzip -dc $vcfInfile |" : $vcfInfile or die "Cannot open file $vcfInfile\n";
+	my $linenum = 0;
+
+	if ($vcfInfile =~ /\.gz$/) { open I, "<:gzip",$vcfInfile or die "Cannot open file $vcfInfile\n"; } 
+    else { open I, $vcfInfile or die "Cannot open file $vcfInfile\n"; }
+
 	while ( <I> ) {
 
 		chomp;
-		my @col = split;
 		next if /^#/;
+		my @col = split;
+		next if $refId ne "ALL" and $refId ne $col[0];		
+
+		++$linenum; print STDERR "\t-- have loaded $$linenum lines\n" if $linenum % 100000 == 0;
 
 		my @format = split /:/, $col[8];
 		die "[ERROR] The first field in FORMAT should be 'GT'\n" if $format[0] ne 'GT';
