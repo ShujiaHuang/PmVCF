@@ -127,6 +127,7 @@ sub GetFormatValue {
 		for ( my $i = 9; $i < @col; ++$i ) {
 			my @data = split /:/, $col[$i];
 			for my $f (@field) {
+				$data[$fmat2Indx{$f}] = "." if !defined $data[$fmat2Indx{$f}]; 
 				$$formatValue{$key}->[$i-9]->{$f} = $data[$fmat2Indx{$f}];
 			}
 		}
