@@ -4,7 +4,6 @@
 use strict;
 use warnings;
 use Getopt::Long;
-use PerlIO::gzip;
 
 use lib "/home/siyang/USER/huangshujia/iCodeSpace/perl/My/PmVCF";
 use vcf;
@@ -74,20 +73,20 @@ Caution:
 	### Output 
 	for my $k ( sort {$a cmp $b} keys %toheader ) { print "$toheader{$k}\n"; }
 
-	if ($toVcfInfile=~/\.gz$/) { open I, "<:gzip",$toVcfInfile or die "Cannot open file $toVcfInfile\n"; } 
-	else { open I, $toVcfInfile or die "Cannot open file $toVcfInfile\n"; }
+	open I, $toVcfInfile=~/\.gz$/ ? "gzip -dc $toVcfInfile|" :$toVcfInfile or die "Cannot open file $toVcfInfile\n";
 
 	my $linenum = 0;
 	while ( <I> ) {
 		chomp;
 		next if /^#/;
-		my @col = split;
-		next if $refId ne "ALL" and $refId ne $col[0];		
+		my @col = split /\s+/, $_;
+		next if ( ($refId ne "ALL") and ($refId ne $col[0]) );		
 
 		++$linenum; print STDERR "\t-- have loaded $linenum lines\n" if $linenum % 100000 == 0;
 
 		my @format = split /:/, $col[8];
-        die "[ERROR] The first field in FORMAT should be 'GT' in $col[8]\n$_\n" if $format[0] ne 'GT';
+		die "$_\n@col\n" if @col < 10;
+        die "[ERROR] The first field in FORMAT should be 'GT' in $col[8]\n@col\n" if $format[0] ne 'GT';
 
 		my %fmat2Indx; for (my $i = 0; $i < @format; ++$i ) { $fmat2Indx{ $format[$i] } = $i; }
 		my $endIndx = $#format;
@@ -129,9 +128,7 @@ sub GetFormatValue {
 	my %sample;
 	my $linenum = 0;
 
-	if ($vcfInfile =~ /\.gz$/) { open I, "<:gzip",$vcfInfile or die "Cannot open file $vcfInfile\n"; } 
-    else { open I, $vcfInfile or die "Cannot open file $vcfInfile\n"; }
-
+	open I,$vcfInfile =~ /\.gz$/ ? "gzip -dc $vcfInfile|" : $vcfInfile or die "Cannot open file $vcfInfile\n";
 	while ( <I> ) {
 
 		chomp;
