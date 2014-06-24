@@ -77,14 +77,17 @@ Caution:
 	if ($toVcfInfile=~/\.gz$/) { open I, "<:gzip",$toVcfInfile or die "Cannot open file $toVcfInfile\n"; } 
 	else { open I, $toVcfInfile or die "Cannot open file $toVcfInfile\n"; }
 
+	my $linenum = 0;
 	while ( <I> ) {
 		chomp;
 		next if /^#/;
 		my @col = split;
 		next if $refId ne "ALL" and $refId ne $col[0];		
 
+		++$linenum; print STDERR "\t-- have loaded $linenum lines\n" if $linenum % 100000 == 0;
+
 		my @format = split /:/, $col[8];
-        die "[ERROR] The first field in FORMAT should be 'GT'\n" if $format[0] ne 'GT';
+        die "[ERROR] The first field in FORMAT should be 'GT' in $col[8]\n$_\n" if $format[0] ne 'GT';
 
 		my %fmat2Indx; for (my $i = 0; $i < @format; ++$i ) { $fmat2Indx{ $format[$i] } = $i; }
 		my $endIndx = $#format;
@@ -109,7 +112,7 @@ Caution:
 		print join "\t", @col; print "\n";
 	}
 	close I;
-	print STDERR "[INFO] FORMAT adding done.\n";
+	print STDERR "[INFO] FORMAT adding done. Total lines are $linenum\n";
 }
 
 sub UpdateValueInFORMAT {}
