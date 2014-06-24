@@ -80,7 +80,7 @@ Caution:
 		chomp;
 		next if /^#/;
 		my @col = split /\s+/, $_;
-		next if ( ($refId ne "ALL") and ($refId ne $col[0]) );		
+		next if ( ($refId ne "ALL") and ($refId ne $col[0]) );
 
 		++$linenum; print STDERR "\t-- have loaded $linenum lines\n" if $linenum % 100000 == 0;
 
