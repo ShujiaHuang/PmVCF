@@ -99,6 +99,7 @@ Caution:
 		my $pos = "$col[0]:$col[1]";
 		my %tmp = %fmat2Indx; delete $tmp{'GT'};
 		my @key = sort {$a cmp $b} keys %tmp;
+		if (!exists $newFormatValue{$pos}){ print STDERR "$_\n"; next;} # ignore the position not in newFormatValue.
 		for ( my $i = 9; $i < @col; ++$i ) {
 			
 			my @data = split /:/, $col[$i];
