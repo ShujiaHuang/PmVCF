@@ -136,7 +136,7 @@ sub GetFormatValue {
 		my @col = split;
 		next if $refId ne "ALL" and $refId ne $col[0];		
 
-		++$linenum; print STDERR "\t-- have loaded $$linenum lines\n" if $linenum % 100000 == 0;
+		++$linenum; print STDERR "\t-- have loaded $linenum lines\n" if $linenum % 100000 == 0;
 
 		my @format = split /:/, $col[8];
 		die "[ERROR] The first field in FORMAT should be 'GT'\n" if $format[0] ne 'GT';
