@@ -11,15 +11,69 @@ use vcf;
 die qq/
 Usage   : perl $0 <command> [<arguments>]\n
 Command : 
-    addformat    Add new fields to 'FORMAT' for each samples.
+    addformat       Add new fields to 'FORMAT' for each samples.
+    extractformat   Extract the specific fields in 'FORMAT' for each samples
 / if @ARGV < 1;
 my $command = shift @ARGV;
-my %func    = ( 'addformat' => \&AddFORMAT, 'addinfo' => \&AddInfo );
+my %func    = ( 'addformat' => \&AddFORMAT, 'extractformat' => \&ExtractFORMAT );
 die "Unknown command $command\n" if !defined($func{$command}) ;
 &{$func{$command}};
 
 print STDERR "\n************************** Processing $command DONE **************************\n";
 #####################
+
+sub ExtractFORMAT {
+
+	my $ext = '';
+	GetOptions ( "ext=s" => \$ext );
+
+	die qq/
+perl $0 extractformat [Option] <inVcffile> > Output
+
+    Options :
+
+        -ext  [str]  Extract format fields. e.g. 'foo:bar'. [NULL]
+
+                     Caution : 
+                     You should mind this order of format field. This progrom will just output the order
+                     as you input by parameter -ext. If your paramter is -ext 'bar:foo', then the output order is 
+                     still 'bar:foo'. And you'd better alaways extract 'GT' and make it to be the first field.
+\n/ if @ARGV != 1;
+	print STDERR "[INFO] perl $0 extractformat -ext $ext @ARGV \n\n" if @ARGV;
+	
+	my $vcfInfile = shift @ARGV;
+	my @getformat = split /:/, $ext;
+	my $linenum   = 0;
+	open  I, $vcfInfile =~ /\.gz$/ ? "gzip -dc $vcfInfile |" :$vcfInfile or die "Cannot open file $vcfInfile\n";
+	print STDERR "[INFO] Extracting From $vcfInfile\n";
+	while ( <I> ) {
+		chomp;
+		if (/^#/) { print "$_\n"; next; }
+		my @col = split;
+
+		++$linenum; print STDERR "\t-- have loaded $linenum lines\n" if $linenum % 100000 == 0;
+		if (length($ext) == 0) { print join "\t", @col[0..7]; print "\n"; next; } # Don't get any foramt fields
+
+		my @format = split /:/, $col[8];
+        die "$_\n@col\n" if @col < 10;
+        die "[ERROR] The first field in FORMAT should be 'GT' in $col[8]\n@col\n" if $format[0] ne 'GT';
+
+        my %fmat2Indx; for (my $i = 0; $i < @format; ++$i ) { $fmat2Indx{ $format[$i] } = $i; }
+		for my $f ( @getformat ) { die "[ERROR] '$f' is not in $col[8]\n" if !exists $fmat2Indx{$f}; }
+        for ( my $i = 9; $i < @col; ++$i ) {
+
+            my @data = split /:/, $col[$i];
+            $col[$i] = join ":", @data[ (map {$fmat2Indx{$_}} @getformat) ]; # Re-new the data 
+        }
+        $col[8] = join ":",@getformat;
+        print join "\t", @col; print "\n";
+	
+	}
+	close I;
+	
+	print STDERR "[INFO] FORMAT Extracting done. Total lines are $linenum\n";
+
+}
 
 sub AddFORMAT {
 	my ( $fromVcfInfile, $toVcfInfile, $add );
