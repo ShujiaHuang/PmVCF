@@ -59,7 +59,7 @@ perl $0 extractformat [Option] <inVcffile> > Output
         die "[ERROR] The first field in FORMAT should be 'GT' in $col[8]\n@col\n" if $format[0] ne 'GT';
 
         my %fmat2Indx; for (my $i = 0; $i < @format; ++$i ) { $fmat2Indx{ $format[$i] } = $i; }
-		for my $f ( @getformat ) { die "[ERROR] '$f' is not in $col[8]\n" if !exists $fmat2Indx{$f}; }
+		for my $f ( @getformat ) { die "[ERROR] '$f' is not in $col[8]\n$_\n" if !exists $fmat2Indx{$f}; }
         for ( my $i = 9; $i < @col; ++$i ) {
 
             my @data = split /:/, $col[$i];
